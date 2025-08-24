@@ -295,7 +295,7 @@ def process_incomplete_trade(last_trade, df_with_signals, coin_pair):
         if trade_close_time_ts.tz is not None:
             trade_close_time_ts = trade_close_time_ts.tz_localize(None)
         
-        df_after = df_with_signals[df_with_signals["time"] >= trade_close_time_ts].copy()
+        df_after = df_with_signals[df_with_signals["time"] > trade_close_time_ts].copy()
         return df_after
     #print(f"No new data to process incomplete trade for {coin_pair}")
     return None
