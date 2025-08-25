@@ -83,9 +83,14 @@ def generate_trading_signals(df):
     )
     
     # Trigger signals only on transition (like crossover)
-    df['long_signal'] = df['long_condition'] & ~df['long_condition'].shift(1).fillna(False)
-    df['short_signal'] = df['short_condition'] & ~df['short_condition'].shift(1).fillna(False)
+    #df['long_signal'] = df['long_condition'] & ~df['long_condition'].shift(1).fillna(False)
+    #df['short_signal'] = df['short_condition'] & ~df['short_condition'].shift(1).fillna(False)
     
+    # Trigger signals only on transition (like crossover)
+    df['long_signal']  = df['long_condition']  & ~df['long_condition'].shift(1, fill_value=False)
+    df['short_signal'] = df['short_condition'] & ~df['short_condition'].shift(1, fill_value=False)
+
+
     # Initialize signal arrays
     length = len(df)
     signals = np.zeros(length)
