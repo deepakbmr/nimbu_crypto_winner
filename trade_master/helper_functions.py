@@ -227,14 +227,14 @@ def generate_trades_df(df):
             trades_list.append(trade_record)
     
     trades_df = pd.DataFrame(trades_list)
-    #print(f"Generated trades DataFrame with {trades_list} trades")
+    print(f"Generated trades DataFrame with {trades_list} trades")
     return trades_df
 
 def process_incomplete_trade(last_trade, df_with_signals, coin_pair):
     """
     Process an incomplete trade by checking SL/TP and then process new trades.
     """
-    #print(f"process incomplete trade {coin_pair} last trade original time {last_trade.trade_start_time}")
+    print(f"process incomplete trade {coin_pair} last trade original time {last_trade.trade_start_time}")
     last_trade_start_time = pd.Timestamp(last_trade.trade_start_time)
     #print(f"process incomplete trade {coin_pair} last trade start time after pd.timestamp {last_trade_start_time}")
     if last_trade_start_time.tz is not None:
@@ -247,7 +247,7 @@ def process_incomplete_trade(last_trade, df_with_signals, coin_pair):
     df_after = df_with_signals[df_with_signals["time"] >= last_trade_start_time].copy()
     #print(f"df_after first trade time after old signal removal {df_after['time'].iloc[0]} and last trade time is {last_trade_start_time}")
     if df_after.empty:
-        #print(f"No new data to process incomplete trade for {coin_pair}")
+        print(f"No new data to process incomplete trade for {coin_pair}")
         return None
 
     buy_price = float(last_trade.buy_price)
@@ -294,7 +294,7 @@ def process_incomplete_trade(last_trade, df_with_signals, coin_pair):
         last_trade.result = 'win' if trade_won else 'lose'
         last_trade.gain_percentage = gain_percentage
         last_trade.save()  # is_virtual determined in views.py
-        #print(f"Completed trade for {coin_pair} at {trade_close_time}")
+        print(f"Completed trade for {coin_pair} at {trade_close_time}")
         
         trade_close_time_ts = pd.Timestamp(trade_close_time)
         if trade_close_time_ts.tz is not None:
@@ -302,7 +302,7 @@ def process_incomplete_trade(last_trade, df_with_signals, coin_pair):
         
         df_after = df_with_signals[df_with_signals["time"] > trade_close_time_ts].copy()
         return df_after
-    #print(f"No new data to process incomplete trade for {coin_pair}")
+    print(f"No new data to process incomplete trade for {coin_pair}")
     return None
 
 def process_new_trades(df_with_signals, coin_pair):
@@ -329,10 +329,10 @@ def process_new_trades(df_with_signals, coin_pair):
             # is_virtual=False  # Default to False, to be determined in views.py
         )
 
-    #print(f"Saved {len(trades_df)} new trades for {coin_pair}")
+    print(f"Saved {len(trades_df)} new trades for {coin_pair}")
 
 def process_coin_pair(coin_pair_name, client):
-    #print(f"Processing {coin_pair_name}...")
+    print(f"Processing {coin_pair_name}...")
     historical_data_1m = fetch_historical_data(client, coin_pair_name, '1m', limit=1000)
     #print(f"last candle for {coin_pair_name}: {historical_data_1m.iloc[-1] if historical_data_1m is not None else 'None'}")
     if historical_data_1m is None:
@@ -340,7 +340,7 @@ def process_coin_pair(coin_pair_name, client):
         return
 
     historical_data_1m['symbol'] = coin_pair_name
-    #print(f"Fetched historical data for {coin_pair_name} with last rows")
+    print(f"Fetched historical data for {coin_pair_name} with last rows")
     #print(historical_data_1m.tail(1))
     try:
         signals_df = generate_trading_signals(historical_data_1m)
@@ -348,10 +348,10 @@ def process_coin_pair(coin_pair_name, client):
         
         if trades.exists():
             last_trade = trades.last()
-            #print(f"(Trade table) Last trade start time for {coin_pair_name}: {last_trade.trade_start_time}")
+            print(f"(Trade table) Last trade start time for {coin_pair_name}: {last_trade.trade_start_time}")
             #print(f"(Trade table) Last trade close time for {coin_pair_name}: {last_trade.trade_close_time} {type(last_trade.trade_close_time)}")
             if last_trade.trade_close_time is not None:
-                #print(f"(Trade table) Last trade for {coin_pair_name} is already closed, processing new trades...")
+                print(f"(Trade table) Last trade for {coin_pair_name} is already closed, processing new trades...")
                 last_trade_close_time = pd.Timestamp(last_trade.trade_close_time)
                 if last_trade_close_time.tz is not None:
                     last_trade_close_time = last_trade_close_time.tz_localize(None)
@@ -361,12 +361,12 @@ def process_coin_pair(coin_pair_name, client):
                 if not signals_df.empty:
                     process_new_trades(signals_df, coin_pair_name)
             else:
-                #print(f"(Trade table) Processing incomplete trade for {coin_pair_name}...")
+                print(f"(Trade table) Processing incomplete trade for {coin_pair_name}...")
                 signals_df = process_incomplete_trade(last_trade, signals_df, coin_pair_name)
                 if signals_df is not None and not signals_df.empty:
                     process_new_trades(signals_df, coin_pair_name)
         else:
-            #print(f"No trades found for {coin_pair_name}, starting new backtest...")
+            print(f"No trades found for {coin_pair_name}, starting new backtest...")
             signals_df = signals_df.iloc[max(EMA_FAST, EMA_SLOW, VOLUME_PERIOD):]  # Skip initial rows for indicator warmup
             process_new_trades(signals_df, coin_pair_name)
     except Exception as e:
