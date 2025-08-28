@@ -244,7 +244,7 @@ def process_incomplete_trade(last_trade, df_with_signals, coin_pair):
     if df_with_signals["time"].dt.tz is not None:
         df_with_signals["time"] = df_with_signals["time"].dt.tz_localize(None)
     #print(f"df with signals first trade time after localize {df_with_signals['time'].iloc[0]}")
-    df_after = df_with_signals[df_with_signals["time"] >= last_trade_start_time].copy()
+    df_after = df_with_signals[df_with_signals["time"] > last_trade_start_time].copy()
     #print(f"df_after first trade time after old signal removal {df_after['time'].iloc[0]} and last trade time is {last_trade_start_time}")
     if df_after.empty:
         print(f"No new data to process incomplete trade for {coin_pair}")
